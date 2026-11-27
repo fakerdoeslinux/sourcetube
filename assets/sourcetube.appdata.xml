@@ -9,7 +9,7 @@
     <p>SourceTube is a privacy-focused YouTube client with a 2018-style dark interface. It proxies metadata, blocks trackers, and uses privacy-enhanced video embeds.</p>
   </description>
   <launchable type="desktop-id">io.github.fakerdoeslinux.sourcetube.desktop</launchable>
-  <url type="homepage">https://github.com/fakerdoeslinux/source-tube</url>
+  <url type="homepage">https://github.com/fakerdoeslinux/sourcetube</url>
   <developer_name>fakerdoeslinux</developer_name>
   <content_rating type="oars-1.1"/>
   <provides>

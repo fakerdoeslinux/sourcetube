@@ -29,20 +29,9 @@ SourceTube removes trackers from the client, but YouTube is still YouTube:
 
 ## Get your Google credentials
 
-Google credentials are only needed for sign-in and subscriptions. Public search and trending work without them.
+Google credentials are only needed for sign-in and subscriptions. Public search and trending work without them. Creating the OAuth client is free; no billing account or credit card is needed for personal use.
 
-1. Open Google Cloud Console and create a project.
-2. Enable **YouTube Data API v3**.
-3. Create an OAuth client ID of type **Web application**.
-4. Add the exact redirect URI: `http://localhost:8787/api/auth/callback`
-5. Copy `.env.example` to `.env`.
-6. Fill in `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and a long random `SESSION_SECRET`.
-
-Generate a session secret with:
-
-```bash
-openssl rand -base64 48
-```
+See [OAUTH.md](OAUTH.md) for the full Google Cloud setup, `.env` values, where to put the file for each install method, the port-fallback gotcha, and verification steps.
 
 ## Install on Linux
 
@@ -78,8 +67,8 @@ Put your `.env` file in `~/.config/sourcetube/.env` or next to the AppImage befo
 Requires Rust 1.85 or newer.
 
 ```bash
-git clone https://github.com/fakerdoeslinux/source-tube.git
-cd source-tube
+git clone https://github.com/fakerdoeslinux/sourcetube.git
+cd sourcetube
 cp .env.example .env
 cargo run --release
 ```
@@ -105,8 +94,8 @@ There is no native macOS build. SourceTube works on macOS through the web client
 ### Web client with Docker
 
 ```bash
-git clone https://github.com/fakerdoeslinux/source-tube.git
-cd source-tube
+git clone https://github.com/fakerdoeslinux/sourcetube.git
+cd sourcetube
 cp .env.example .env
 docker compose up -d
 ```
