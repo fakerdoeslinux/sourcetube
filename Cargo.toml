@@ -1,0 +1,31 @@
+[package]
+name = "source-tube"
+version = "1.1.0"
+edition = "2024"
+
+[[bin]]
+name = "sourcetube"
+path = "src/main.rs"
+
+[[bin]]
+name = "sourcetube-player"
+path = "src/bin/sourcetube-player.rs"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[dependencies]
+aes-gcm = "0.10"
+base64 = "0.22"
+libloading = "0.9"
+rand = "0.9"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+tiny_http = "0.12"
+ureq = { version = "3", default-features = false, features = ["native-tls", "gzip"] }
+url = "2"

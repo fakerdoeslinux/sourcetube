@@ -2,16 +2,13 @@
 setlocal
 cd /d "%~dp0app"
 
-where node >nul 2>nul
-if errorlevel 1 (
-  echo Node.js 20 or newer is required.
-  echo Download it from https://nodejs.org and install it, then run this again.
-  pause
-  exit /b 1
-)
+if "%PORT%"=="" set PORT=8787
+if "%APP_ORIGIN%"=="" set APP_ORIGIN=http://localhost:%PORT%
+if "%GOOGLE_REDIRECT_URI%"=="" set GOOGLE_REDIRECT_URI=%APP_ORIGIN%/api/auth/callback
+set SOURCETUBE_PUBLIC=%~dp0app\public
+set SOURCETUBE_PLAYER=%~dp0app\sourcetube-player.exe
 
-for /f "tokens=2 delims= " %%v in ('node -v') do set NODEVER=%%v
-echo SourceTube starting with Node %NODEVER%
-echo Open http://localhost:8787 in your browser.
-node server.mjs
-pause
+echo SourceTube running at %APP_ORIGIN%
+start "SourceTube" /MIN "%~dp0app\sourcetube.exe"
+timeout /t 2 >nul
+start "" "%APP_ORIGIN%"

@@ -46,7 +46,13 @@ function formatViews(number) {
 }
 
 function formatDuration(iso) {
-  if (!iso) return '';
+  if (!iso && iso !== 0) return '';
+  if (typeof iso === 'number') {
+    const hours = Math.floor(iso / 3600);
+    const minutes = Math.floor((iso % 3600) / 60);
+    const seconds = Math.floor(iso % 60);
+    return hours ? `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}` : `${minutes}:${String(seconds).padStart(2, '0')}`;
+  }
   const match = /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(iso);
   if (!match) return '';
   const [, hours, minutes, seconds] = match.map((part) => Number(part || 0));
@@ -56,6 +62,7 @@ function formatDuration(iso) {
 }
 
 function relativeTime(value) {
+  if (typeof value === 'number') value = new Date(value * 1000).toISOString();
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '';
   const days = Math.floor((Date.now() - date.getTime()) / 86400000);
@@ -226,7 +233,10 @@ async function renderWatch(route) {
             <div class="avatar" aria-hidden="true">${initial(video.channel)}</div>
             <div><div class="channel-name">${escapeHtml(video.channel)}</div><div class="channel-sub">${escapeHtml(formatViews(video.views))} • ${escapeHtml(relativeTime(video.publishedAt))}</div></div>
           </div>
-          <a class="button ghost" href="#/search?q=${encodeURIComponent(video.channel)}">Search channel</a>
+          <div class="hero-actions">
+            <button class="button primary" id="native-player" data-id="${id}">Native player</button>
+            <a class="button ghost" href="#/search?q=${encodeURIComponent(video.channel)}">Search channel</a>
+          </div>
         </div>
         <div class="privacy-note">Playback uses YouTube's privacy-enhanced embed. SourceTube injects no analytics, no ad scripts, and no third-party trackers. Your IP still reaches YouTube while the video itself streams.</div>
         <div class="description">${escapeHtml(video.description || 'No description available.')}</div>
@@ -236,6 +246,21 @@ async function renderWatch(route) {
         ${relatedCards || '<p class="muted">No recommendations returned.</p>'}
       </aside>
     </div>`;
+
+  $('#native-player')?.addEventListener('click', async (event) => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    button.textContent = 'Launching…';
+    try {
+      await api(`/api/launch?id=${encodeURIComponent(button.dataset.id)}`);
+      toast('Native player launched through mpv/libmpv.');
+    } catch (error) {
+      toast(error.message);
+    } finally {
+      button.disabled = false;
+      button.textContent = 'Native player';
+    }
+  });
 }
 
 async function renderSubscriptions() {

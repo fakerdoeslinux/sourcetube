@@ -1,20 +1,32 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
   <title id="title">SourceTube</title>
-  <desc id="desc">A red play arrow cut from an open-source channel.</desc>
+  <desc id="desc">A red play window cut from an open-source bracket, with a green fork tail.</desc>
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#1b1b1b"/>
-      <stop offset="1" stop-color="#0b0b0b"/>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#242424"/>
+      <stop offset="1" stop-color="#0d0d0d"/>
     </linearGradient>
     <linearGradient id="red" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ff4b4b"/>
-      <stop offset="1" stop-color="#c00"/>
+      <stop offset="0" stop-color="#ff5a4f"/>
+      <stop offset="0.55" stop-color="#ed2017"/>
+      <stop offset="1" stop-color="#a70d08"/>
     </linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#71ef9f"/>
+      <stop offset="1" stop-color="#23a95c"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
   </defs>
-  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#bg)" stroke="#333" stroke-width="2"/>
-  <path d="M12 18h40a8 8 0 0 1 8 8v12a8 8 0 0 1-8 8H12a8 8 0 0 1-8-8V26a8 8 0 0 1 8-8Z" fill="url(#red)"/>
-  <path d="M27 23.5 43 32 27 40.5Z" fill="#fff"/>
-  <path d="M17 52h30" stroke="#44d17a" stroke-width="3" stroke-linecap="round"/>
-  <circle cx="17" cy="52" r="3" fill="#44d17a"/>
-  <circle cx="47" cy="52" r="3" fill="#44d17a"/>
+  <rect x="10" y="10" width="236" height="236" rx="54" fill="url(#tile)" stroke="#3b3b3b" stroke-width="4"/>
+  <g filter="url(#shadow)">
+    <path d="M52 72h152c14 0 24 11 24 25v62c0 14-10 25-24 25H52c-14 0-24-11-24-25V97c0-14 10-25 24-25Z" fill="url(#red)"/>
+    <path d="M112 94 169 128l-57 34Z" fill="#fff"/>
+  </g>
+  <path d="M69 35H45v186h24" fill="none" stroke="url(#green)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M187 35h24v186h-24" fill="none" stroke="url(#green)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="45" cy="128" r="9" fill="#71ef9f"/>
+  <circle cx="211" cy="128" r="9" fill="#71ef9f"/>
+  <path d="M69 128h-24M211 128h-24" stroke="#71ef9f" stroke-width="7" stroke-linecap="round"/>
 </svg>

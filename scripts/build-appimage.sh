@@ -2,24 +2,30 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VERSION="${VERSION:-1.0.0}"
-NODE_VERSION="${NODE_VERSION:-v26.13.1}"
+VERSION="${VERSION:-1.1.0}"
 OUTPUT="${OUTPUT:-$ROOT/dist/SourceTube-x86_64.AppImage}"
 CACHE="$ROOT/build/cache"
 APPDIR="$ROOT/build/SourceTube.AppDir"
 
-rm -rf "$APPDIR"
-mkdir -p "$ROOT/dist" "$CACHE" "$APPDIR/usr/share/sourcetube" \
-  "$APPDIR/usr/lib" "$APPDIR/usr/share/icons/hicolor/256x256/apps"
+echo "Building Rust release binaries..."
+(cd "$ROOT" && cargo build --release)
 
-NODE_TAR="$CACHE/node-$NODE_VERSION-linux-x64.tar.xz"
-if [ ! -f "$NODE_TAR" ]; then
-  echo "Downloading Node $NODE_VERSION..."
-  curl -fsSL "https://nodejs.org/dist/$NODE_VERSION/node-$NODE_VERSION-linux-x64.tar.xz" -o "$NODE_TAR"
-fi
-rm -rf "$APPDIR/usr/lib/node"
-mkdir -p "$APPDIR/usr/lib/node"
-tar -xJf "$NODE_TAR" -C "$APPDIR/usr/lib/node" --strip-components=1
+rm -rf "$APPDIR"
+mkdir -p "$ROOT/dist" "$CACHE" \
+  "$APPDIR/usr/bin" \
+  "$APPDIR/usr/share/sourcetube/public" \
+  "$APPDIR/usr/share/icons/hicolor/256x256/apps" \
+  "$APPDIR/usr/share/icons/hicolor/scalable/apps" \
+  "$APPDIR/usr/share/applications" \
+  "$APPDIR/usr/share/metainfo"
+
+cp "$ROOT/target/release/sourcetube" "$APPDIR/usr/bin/sourcetube"
+cp "$ROOT/target/release/sourcetube-player" "$APPDIR/usr/bin/sourcetube-player"
+cp "$ROOT/public/"* "$APPDIR/usr/share/sourcetube/public/"
+cp "$ROOT/.env.example" "$APPDIR/usr/share/sourcetube/.env.example"
+cp "$ROOT/public/icon.svg" "$APPDIR/usr/share/icons/hicolor/scalable/apps/sourcetube.svg"
+rsvg-convert -w 256 -h 256 "$ROOT/public/icon.svg" -o "$APPDIR/usr/share/icons/hicolor/256x256/apps/sourcetube.png"
+cp "$APPDIR/usr/share/icons/hicolor/256x256/apps/sourcetube.png" "$APPDIR/sourcetube.png"
 
 TOOL="$CACHE/appimagetool-x86_64.AppImage"
 if [ ! -f "$TOOL" ]; then
@@ -28,19 +34,13 @@ if [ ! -f "$TOOL" ]; then
   chmod +x "$TOOL"
 fi
 
-cp "$ROOT/server.mjs" "$ROOT/package.json" "$APPDIR/usr/share/sourcetube/"
-cp -r "$ROOT/public" "$APPDIR/usr/share/sourcetube/"
-cp "$ROOT/.env.example" "$APPDIR/usr/share/sourcetube/"
-cp "$ROOT/public/icon.svg" "$APPDIR/usr/share/icons/hicolor/scalable/apps/sourcetube.svg" 2>/dev/null || true
-mkdir -p "$APPDIR/usr/share/icons/hicolor/scalable/apps"
-cp "$ROOT/public/icon.svg" "$APPDIR/usr/share/icons/hicolor/scalable/apps/sourcetube.svg"
-rsvg-convert -w 256 -h 256 "$ROOT/public/icon.svg" -o "$APPDIR/usr/share/icons/hicolor/256x256/apps/sourcetube.png"
-cp "$APPDIR/usr/share/icons/hicolor/256x256/apps/sourcetube.png" "$APPDIR/sourcetube.png"
-
 cat > "$APPDIR/AppRun" <<'APPRUN_EOF'
 #!/bin/sh
 HERE="$(dirname "$(readlink -f "$0")")"
-export PATH="$HERE/usr/lib/node/bin:$PATH"
+export PATH="$HERE/usr/bin:$PATH"
+export LD_LIBRARY_PATH="$HERE/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export SOURCETUBE_PUBLIC="$HERE/usr/share/sourcetube/public"
+export SOURCETUBE_PLAYER="$HERE/usr/bin/sourcetube-player"
 
 for env_file in \
   "${XDG_CONFIG_HOME:-$HOME/.config}/sourcetube/.env" \
@@ -61,10 +61,8 @@ export GOOGLE_REDIRECT_URI="${GOOGLE_REDIRECT_URI:-$APP_ORIGIN/api/auth/callback
 export SOURCETUBE_DATA="${SOURCETUBE_DATA:-${XDG_DATA_HOME:-$HOME/.local/share}/sourcetube}"
 mkdir -p "$SOURCETUBE_DATA"
 
-echo "SourceTube __VERSION__ running at $APP_ORIGIN"
-exec "$HERE/usr/lib/node/bin/node" "$HERE/usr/share/sourcetube/server.mjs"
+exec "$HERE/usr/bin/sourcetube"
 APPRUN_EOF
-sed -i "s/__VERSION__/$VERSION/" "$APPDIR/AppRun"
 chmod +x "$APPDIR/AppRun"
 
 DESKTOP_FILE="io.github.fakerdoeslinux.sourcetube.desktop"
@@ -77,14 +75,12 @@ Comment=Privacy-first open-source YouTube client
 Exec=AppRun
 Icon=sourcetube
 Terminal=false
-Categories=AudioVideo;Video;
+Categories=AudioVideo;Video;Network;
 StartupNotify=true
 DESKTOP
-mkdir -p "$APPDIR/usr/share/applications"
 cp "$APPDIR/$DESKTOP_FILE" "$APPDIR/usr/share/applications/$DESKTOP_FILE"
-mkdir -p "$APPDIR/usr/share/metainfo"
 cp "$ROOT/assets/sourcetube.appdata.xml" "$APPDIR/usr/share/metainfo/io.github.fakerdoeslinux.sourcetube.appdata.xml"
-ln -sf "usr/share/icons/hicolor/256x256/apps/sourcetube.png" "$APPDIR/.DirIcon"
+ln -sfn "usr/share/icons/hicolor/256x256/apps/sourcetube.png" "$APPDIR/.DirIcon"
 
 echo "Building $OUTPUT..."
 ARCH=x86_64 "$TOOL" --appimage-extract-and-run "$APPDIR" "$OUTPUT"
