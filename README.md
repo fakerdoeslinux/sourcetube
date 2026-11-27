@@ -61,7 +61,9 @@ chmod +x SourceTube-x86_64.AppImage
 ./SourceTube-x86_64.AppImage
 ```
 
-4. Open `http://localhost:8787`.
+4. The app opens the browser automatically on the port it selected. If `8787` was busy, it uses the next free port and still opens the right URL.
+
+Set `SOURCETUBE_NO_BROWSER=1` to suppress the browser launch. Server output is written to `~/.local/share/sourcetube/server.log`.
 
 If your distro lacks FUSE, run:
 
@@ -92,7 +94,7 @@ Windows uses the portable ZIP; there is no Windows AppImage.
 2. Extract it somewhere you can write to, for example `Documents\SourceTube`.
 3. Copy `app\.env.example` to `app\.env` and fill in your credentials.
 4. Double-click `sourcetube.cmd`.
-5. Open `http://localhost:8787`.
+5. The browser opens automatically on the selected port. If `8787` was busy, it uses the next free port and opens there. Server output is written to `%LOCALAPPDATA%\SourceTube\server.log`.
 
 The ZIP contains native `sourcetube.exe` and `sourcetube-player.exe`. No Node.js install is needed. For low-RAM native playback, install mpv for Windows and keep `mpv.exe` in `PATH`.
 

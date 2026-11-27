@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VERSION="${VERSION:-1.1.0}"
+VERSION="${VERSION:-1.1.1}"
 STAGE="$ROOT/build/SourceTube-Windows"
 ZIP="$ROOT/dist/SourceTube-Windows.zip"
 
@@ -39,7 +39,8 @@ SourceTube $VERSION for Windows
 1. Extract the ZIP somewhere writable, for example Documents\\SourceTube.
 2. Copy app\\.env.example to app\\.env and fill in your credentials.
 3. Double-click sourcetube.cmd.
-4. Open http://localhost:8787.
+4. The browser opens automatically on the selected port. If 8787 was busy, a
+   different port is used and the browser opens there instead.
 
 Native playback uses the bundled Rust player through mpv/libmpv. Install mpv for
 Windows and keep mpv.exe in PATH for low-RAM playback. The browser embed still

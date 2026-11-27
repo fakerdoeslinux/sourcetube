@@ -80,6 +80,7 @@ impl Config {
         env::var_os("XDG_RUNTIME_DIR")
             .map(PathBuf::from)
             .or_else(|| env::var_os("TMPDIR").map(PathBuf::from))
+            .or_else(|| env::var_os("TEMP").map(PathBuf::from))
             .unwrap_or_else(|| PathBuf::from("/tmp"))
     }
 
