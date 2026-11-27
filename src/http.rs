@@ -14,7 +14,7 @@ const SECURITY_HEADERS: &[(&str, &str)] = &[
         "Content-Security-Policy",
         "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self' https://www.youtube-nocookie.com; frame-src https://www.youtube-nocookie.com; connect-src 'self'; font-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
     ),
-    ("Referrer-Policy", "no-referrer"),
+    ("Referrer-Policy", "strict-origin-when-cross-origin"),
     ("X-Content-Type-Options", "nosniff"),
     ("X-Frame-Options", "DENY"),
     ("Cross-Origin-Opener-Policy", "same-origin"),

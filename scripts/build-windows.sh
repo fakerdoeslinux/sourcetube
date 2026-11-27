@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VERSION="${VERSION:-1.1.1}"
+VERSION="${VERSION:-1.1.2}"
 STAGE="$ROOT/build/SourceTube-Windows"
 ZIP="$ROOT/dist/SourceTube-Windows.zip"
 

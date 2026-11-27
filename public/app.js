@@ -207,7 +207,8 @@ async function renderWatch(route) {
   document.title = `${video.title} — SourceTube`;
   saveHistory(video);
 
-  const embed = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(video.id)}?rel=0&modestbranding=1&playsinline=1`;
+  const origin = encodeURIComponent(location.origin);
+  const embed = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(video.id)}?rel=0&modestbranding=1&playsinline=1&origin=${origin}`;
   const relatedCards = related.videos.map((item) => `
     <article class="card">
       <a class="thumb" href="#/watch?v=${encodeURIComponent(item.id)}" aria-label="Watch ${escapeHtml(item.title)}">
@@ -226,7 +227,7 @@ async function renderWatch(route) {
   view.innerHTML = `
     <div class="watch">
       <section>
-        <iframe class="player" src="${escapeHtml(embed)}" title="${escapeHtml(video.title)}" referrerpolicy="no-referrer" allowfullscreen></iframe>
+        <iframe class="player" src="${escapeHtml(embed)}" title="${escapeHtml(video.title)}" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
         <h1 class="video-title">${escapeHtml(video.title)}</h1>
         <div class="video-byline">
           <div class="channel">
@@ -238,7 +239,7 @@ async function renderWatch(route) {
             <a class="button ghost" href="#/search?q=${encodeURIComponent(video.channel)}">Search channel</a>
           </div>
         </div>
-        <div class="privacy-note">Playback uses YouTube's privacy-enhanced embed. SourceTube injects no analytics, no ad scripts, and no third-party trackers. Your IP still reaches YouTube while the video itself streams.</div>
+        <div class="privacy-note">Playback uses YouTube's privacy-enhanced embed. The embed sends only this site's origin as referrer because YouTube requires it. SourceTube injects no analytics, no ad scripts, and no third-party trackers. Your IP still reaches YouTube while the video itself streams; use Native player to hand the stream to mpv instead.</div>
         <div class="description">${escapeHtml(video.description || 'No description available.')}</div>
       </section>
       <aside class="related">
