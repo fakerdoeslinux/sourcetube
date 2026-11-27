@@ -8,6 +8,7 @@ OUTPUT="${OUTPUT:-$ROOT/dist/SourceTube-x86_64.AppImage}"
 CACHE="$ROOT/build/cache"
 APPDIR="$ROOT/build/SourceTube.AppDir"
 
+rm -rf "$APPDIR"
 mkdir -p "$ROOT/dist" "$CACHE" "$APPDIR/usr/share/sourcetube" \
   "$APPDIR/usr/lib" "$APPDIR/usr/share/icons/hicolor/256x256/apps"
 
@@ -82,7 +83,7 @@ DESKTOP
 mkdir -p "$APPDIR/usr/share/applications"
 cp "$APPDIR/$DESKTOP_FILE" "$APPDIR/usr/share/applications/$DESKTOP_FILE"
 mkdir -p "$APPDIR/usr/share/metainfo"
-cp "$ROOT/assets/sourcetube.appdata.xml" "$APPDIR/usr/share/metainfo/sourcetube.appdata.xml"
+cp "$ROOT/assets/sourcetube.appdata.xml" "$APPDIR/usr/share/metainfo/io.github.fakerdoeslinux.sourcetube.appdata.xml"
 ln -sf "usr/share/icons/hicolor/256x256/apps/sourcetube.png" "$APPDIR/.DirIcon"
 
 echo "Building $OUTPUT..."

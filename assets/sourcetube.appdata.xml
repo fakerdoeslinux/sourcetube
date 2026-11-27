@@ -10,6 +10,8 @@
   </description>
   <launchable type="desktop-id">io.github.fakerdoeslinux.sourcetube.desktop</launchable>
   <url type="homepage">https://github.com/fakerdoeslinux/source-tube</url>
+  <developer_name>fakerdoeslinux</developer_name>
+  <content_rating type="oars-1.1"/>
   <provides>
     <binary>sourcetube</binary>
   </provides>
