@@ -1,0 +1,14 @@
+services:
+  sourcetube:
+    build: .
+    image: source-tube:1.0.0
+    container_name: sourcetube
+    restart: unless-stopped
+    ports:
+      - "8787:8787"
+    env_file:
+      - .env
+    environment:
+      PORT: 8787
+      APP_ORIGIN: ${APP_ORIGIN:-http://localhost:8787}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:8787/api/auth/callback}

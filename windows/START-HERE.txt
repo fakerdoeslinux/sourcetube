@@ -1,0 +1,9 @@
+SourceTube for Windows
+
+1. Install Node.js 20 or newer from https://nodejs.org
+2. Copy .env.example into the app folder as .env
+3. Fill in your YouTube API key and Google OAuth credentials
+4. Double-click sourcetube.cmd
+5. Open http://localhost:8787
+
+No Mac build is included. Use the web client instructions in README.md.

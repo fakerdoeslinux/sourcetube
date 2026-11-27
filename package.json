@@ -1,0 +1,14 @@
+{
+  "name": "source-tube",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Privacy-first, open-source YouTube client with a 2018-style dark layout.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "AGPL-3.0-only"
+}

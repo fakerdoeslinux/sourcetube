@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="SourceTube — a privacy-first, open-source YouTube client with a 2018 dark layout.">
+  <title>SourceTube</title>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <button class="drawer-toggle" id="drawer-toggle" aria-label="Toggle navigation" aria-expanded="true">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="#/" aria-label="SourceTube home">
+      <img src="/icon.svg" alt="" width="30" height="30">
+      <span>SourceTube</span>
+      <small>open source</small>
+    </a>
+    <form class="search" id="search-form" role="search">
+      <input id="search-input" name="q" type="search" placeholder="Search YouTube" autocomplete="off" aria-label="Search YouTube">
+      <button type="submit" aria-label="Search">⌕</button>
+    </form>
+    <div class="account" id="account">
+      <span class="muted">checking session…</span>
+    </div>
+  </header>
+
+  <div class="shell">
+    <nav class="sidebar" id="sidebar" aria-label="Main navigation">
+      <a class="nav-item active" href="#/" data-nav="home"><span class="glyph">⌂</span>Home</a>
+      <a class="nav-item" href="#/subscriptions" data-nav="subscriptions"><span class="glyph">▣</span>Subscriptions</a>
+      <div class="nav-sep"></div>
+      <p class="nav-title">You</p>
+      <a class="nav-item" href="#/library" data-nav="library"><span class="glyph">◷</span>Library</a>
+      <div class="nav-sep"></div>
+      <p class="nav-title">Privacy</p>
+      <p class="privacy-pill">no trackers</p>
+      <p class="privacy-pill">no Google JS</p>
+      <p class="privacy-pill">proxy metadata</p>
+      <div class="nav-sep"></div>
+      <p class="footer-note">SourceTube 1.0<br>built on the open web</p>
+    </nav>
+
+    <main id="view" tabindex="-1"></main>
+  </div>
+
+  <div class="scrim" id="scrim" hidden></div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <script src="/app.js"></script>
+</body>
+</html>

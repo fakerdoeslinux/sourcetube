@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">SourceTube</title>
+  <desc id="desc">A red play arrow cut from an open-source channel.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1b1b1b"/>
+      <stop offset="1" stop-color="#0b0b0b"/>
+    </linearGradient>
+    <linearGradient id="red" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff4b4b"/>
+      <stop offset="1" stop-color="#c00"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#bg)" stroke="#333" stroke-width="2"/>
+  <path d="M12 18h40a8 8 0 0 1 8 8v12a8 8 0 0 1-8 8H12a8 8 0 0 1-8-8V26a8 8 0 0 1 8-8Z" fill="url(#red)"/>
+  <path d="M27 23.5 43 32 27 40.5Z" fill="#fff"/>
+  <path d="M17 52h30" stroke="#44d17a" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="17" cy="52" r="3" fill="#44d17a"/>
+  <circle cx="47" cy="52" r="3" fill="#44d17a"/>
+</svg>

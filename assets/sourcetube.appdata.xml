@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.fakerdoeslinux.sourcetube</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>AGPL-3.0-only</project_license>
+  <name>SourceTube</name>
+  <summary>Privacy-first open-source YouTube client</summary>
+  <description>
+    <p>SourceTube is a privacy-focused YouTube client with a 2018-style dark interface. It proxies metadata, blocks trackers, and uses privacy-enhanced video embeds.</p>
+  </description>
+  <launchable type="desktop-id">io.github.fakerdoeslinux.sourcetube.desktop</launchable>
+  <url type="homepage">https://github.com/fakerdoeslinux/source-tube</url>
+  <provides>
+    <binary>sourcetube</binary>
+  </provides>
+  <releases>
+    <release version="1.0.0" date="2026-11-27"/>
+  </releases>
+</component>
