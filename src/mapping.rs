@@ -1,10 +1,102 @@
 use serde_json::{Value, json};
+use url::Url;
 
 pub fn valid_video_id(id: &str) -> bool {
     id.len() == 11
         && id
             .bytes()
             .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'-')
+}
+
+/// Wrap an upstream image URL in the same-origin proxy. The browser never
+/// requests third-party images directly (CSP allows only `self` and `data:`).
+pub fn image_proxy_url(raw: &str) -> String {
+    let mut local = Url::parse("http://sourcetube.local/api/image").expect("valid base");
+    local.query_pairs_mut().append_pair("u", raw);
+    format!(
+        "{}{}",
+        local.path(),
+        local
+            .query()
+            .map(|query| format!("?{query}"))
+            .unwrap_or_default()
+    )
+}
+
+fn thumbnail_score(quality: &str, width: u64, height: u64) -> u64 {
+    // FreeTube uses the 16:9 medium thumbnail for video lists. Prefer it over
+    // the letterboxed 4:3 high thumbnail and over maxres images that YouTube
+    // often replaces with a placeholder when no 1280x720 image exists.
+    let quality = match quality {
+        "medium" | "mqdefault" => 5,
+        "high" | "hqdefault" | "sd" | "sddefault" => 3,
+        "maxres" | "maxresdefault" => 2,
+        "default" => 1,
+        _ => 0,
+    };
+    let widescreen = u64::from(width > 0 && height > 0 && width * 9 >= height * 16);
+    quality * 4 + widescreen * 2 + u64::from(width >= 320)
+}
+
+fn usable_image_url(raw: &str) -> Option<String> {
+    let raw = raw.trim();
+    if raw.is_empty() {
+        return None;
+    }
+    if let Some(rest) = raw.strip_prefix("//") {
+        return Some(format!("https://{rest}"));
+    }
+    if raw.starts_with("https://") || raw.starts_with('/') {
+        return Some(raw.to_string());
+    }
+    None
+}
+
+/// Choose the best thumbnail offered by the metadata API, following FreeTube's
+/// approach of using the API-provided URLs instead of guessing one. Relative
+/// URLs are resolved by `/api/image` against the configured Invidious instance.
+pub fn thumbnail(value: &Value) -> String {
+    let mut best: Option<(u64, String)> = None;
+    let mut consider = |quality: &str, item: &Value| {
+        let Some(raw) = item.get("url").and_then(Value::as_str) else {
+            return;
+        };
+        let Some(url) = usable_image_url(raw) else {
+            return;
+        };
+        let width = item.get("width").and_then(Value::as_u64).unwrap_or(0);
+        let height = item.get("height").and_then(Value::as_u64).unwrap_or(0);
+        let score = thumbnail_score(quality, width, height);
+        if best.as_ref().is_none_or(|(current, _)| score > *current) {
+            best = Some((score, url));
+        }
+    };
+
+    if let Some(list) = value.get("videoThumbnails").and_then(Value::as_array) {
+        for item in list {
+            consider(&text(item, "quality"), item);
+        }
+    }
+    if let Some(entries) = value
+        .get("snippet")
+        .and_then(|snippet| snippet.get("thumbnails"))
+        .and_then(Value::as_object)
+    {
+        for (quality, item) in entries {
+            consider(quality, item);
+        }
+    }
+    if let Some((_, url)) = best {
+        return image_proxy_url(&url);
+    }
+
+    let id = text(value, "videoId");
+    let id = if id.is_empty() { text(value, "id") } else { id };
+    if valid_video_id(&id) {
+        format!("/api/thumb/{id}/hqdefault.jpg")
+    } else {
+        "/icon-192.png".to_string()
+    }
 }
 
 fn text(value: &Value, key: &str) -> String {
@@ -42,7 +134,7 @@ pub fn map_video(value: &Value) -> Value {
         "channelId": text(value, "authorId"),
         "description": text(value, "description"),
         "publishedAt": published(value),
-        "thumbnail": format!("/api/thumb/{id}/hqdefault.jpg"),
+        "thumbnail": thumbnail(value),
         "views": number(value, "viewCount"),
         "likes": likes,
         "duration": number(value, "lengthSeconds")
@@ -76,7 +168,7 @@ pub fn map_official_video(item: &Value) -> Value {
         "channelId": snippet.get("channelId").and_then(Value::as_str).unwrap_or(""),
         "description": snippet.get("description").and_then(Value::as_str).unwrap_or(""),
         "publishedAt": snippet.get("publishedAt").cloned().unwrap_or(Value::Null),
-        "thumbnail": format!("/api/thumb/{id}/hqdefault.jpg"),
+        "thumbnail": thumbnail(item),
         "views": views,
         "likes": likes,
         "duration": details.get("duration").cloned().unwrap_or(Value::Null)
@@ -175,6 +267,39 @@ mod tests {
             json!({"videoId": "abcdefghijk", "title": "x", "authorId": "UCadsample00000000000000"}),
         ];
         assert_eq!(clean_items(&items, false).len(), 1);
+    }
+
+    #[test]
+    fn prefers_api_provided_widescreen_thumbnail() {
+        let item = json!({
+            "videoId": "abcdefghijk",
+            "videoThumbnails": [
+                {"quality": "default", "url": "https://inv.example/vi/abcdefghijk/default.jpg", "width": 120, "height": 90},
+                {"quality": "high", "url": "https://inv.example/vi/abcdefghijk/hqdefault.jpg", "width": 480, "height": 360},
+                {"quality": "medium", "url": "//inv.example/vi/abcdefghijk/mqdefault.jpg", "width": 320, "height": 180},
+                {"quality": "maxres", "url": "https://inv.example/vi/abcdefghijk/maxres.jpg", "width": 1280, "height": 720}
+            ]
+        });
+        let url = thumbnail(&item);
+        assert!(url.starts_with("/api/image?u="));
+        assert!(url.contains("mqdefault.jpg"), "got {url}");
+        assert!(url.contains("https%3A%2F%2Finv.example"), "got {url}");
+    }
+
+    #[test]
+    fn reads_youtube_snippet_thumbnails_and_falls_back() {
+        let item = json!({
+            "id": "abcdefghijk",
+            "snippet": {"thumbnails": {
+                "default": {"url": "https://i.ytimg.com/vi/abcdefghijk/default.jpg", "width": 120, "height": 90},
+                "medium": {"url": "https://i.ytimg.com/vi/abcdefghijk/mqdefault.jpg", "width": 320, "height": 180}
+            }}
+        });
+        assert!(thumbnail(&item).contains("mqdefault.jpg"));
+        assert_eq!(
+            thumbnail(&json!({"videoId": "abcdefghijk"})),
+            "/api/thumb/abcdefghijk/hqdefault.jpg"
+        );
     }
 
     #[test]

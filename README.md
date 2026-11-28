@@ -140,7 +140,7 @@ Individual builds:
 
 - No external JavaScript, font, filter list or media request at runtime.
 - No analytics, telemetry, pixel, or ad network.
-- Thumbnails, avatars, DASH manifests/segments and SponsorBlock are reverse-proxied behind a URL guard that denies HTTP, private hosts, trackers and unknown hosts.
+- Thumbnails, avatars, DASH manifests/segments and SponsorBlock are reverse-proxied behind a URL guard that denies HTTP, private hosts, trackers and unknown hosts. Thumbnail URLs come from the metadata API (FreeTube-style) and prefer the 16:9 medium image; browser requests go to `/api/image` and fall back to `/api/thumb/<id>/mqdefault.jpg`.
 - Promo fields and bundled-channel rules are stripped from metadata; the adblock toggle is sent as a request header and stored locally.
 - Strict CSP: `default-src 'self'`, `media-src 'self' blob:`, `connect-src 'self' blob:`, scripts and styles only from SourceTube.
 - `Referrer-Policy: no-referrer`, `Cross-Origin-Opener-Policy: same-origin`.

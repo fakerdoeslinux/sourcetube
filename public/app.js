@@ -65,6 +65,11 @@ function escapeHtml(value) {
     .replaceAll("'", '&#39;');
 }
 
+function thumbnailAttrs(video) {
+  const fallback = `/api/thumb/${encodeURIComponent(video.id)}/mqdefault.jpg`;
+  return `src="${escapeHtml(video.thumbnail)}" data-thumb-fallback="${escapeHtml(fallback)}" alt="" loading="lazy" referrerpolicy="no-referrer"`;
+}
+
 function toast(message) {
   toastEl.textContent = message;
   toastEl.hidden = false;
@@ -144,7 +149,7 @@ function videoCard(video) {
   return `
     <article class="card">
       <a class="thumb" href="#/watch?v=${encodeURIComponent(video.id)}" aria-label="Watch ${title}">
-        <img src="${escapeHtml(video.thumbnail)}" alt="" loading="lazy" referrerpolicy="no-referrer">
+        <img ${thumbnailAttrs(video)}>
         ${duration ? `<span class="duration">${escapeHtml(duration)}</span>` : ''}
       </a>
       <div class="card-body">
@@ -393,7 +398,7 @@ async function renderWatch(route) {
   const relatedCards = related.videos.map((item) => `
     <article class="card">
       <a class="thumb" href="#/watch?v=${encodeURIComponent(item.id)}" aria-label="Watch ${escapeHtml(item.title)}">
-        <img src="${escapeHtml(item.thumbnail)}" alt="" loading="lazy" referrerpolicy="no-referrer">
+        <img ${thumbnailAttrs(item)}>
         ${formatDuration(item.duration) ? `<span class="duration">${escapeHtml(formatDuration(item.duration))}</span>` : ''}
       </a>
       <div class="card-body">
@@ -750,6 +755,14 @@ function applyDrawer() {
 }
 
 async function init() {
+  document.addEventListener('error', (event) => {
+    const image = event.target;
+    if (!(image instanceof HTMLImageElement) || image.dataset.thumbFallbackApplied) return;
+    const fallback = image.dataset.thumbFallback;
+    if (!fallback) return;
+    image.dataset.thumbFallbackApplied = '1';
+    image.src = fallback;
+  }, true);
   applyDrawer();
   $('#drawer-toggle').addEventListener('click', () => {
     const collapsed = sidebar.classList.toggle('collapsed');

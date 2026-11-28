@@ -14,6 +14,7 @@ use url::Url;
 pub enum Purpose {
     Invidious,
     Thumbnail,
+    Image,
     Avatar,
     Media,
     SponsorBlock,
@@ -111,6 +112,19 @@ pub fn validate(raw: &str, purpose: Purpose, config: &Config) -> Result<Url, Str
             .iter()
             .any(|instance| host_matches(instance, &host)),
         Purpose::Thumbnail => host == "i.ytimg.com",
+        // FreeTube-style image proxying: thumbnails come from the configured
+        // Invidious instance (or Google's image hosts), never from arbitrary
+        // hosts, and are always fetched server-side.
+        Purpose::Image => {
+            host == "i.ytimg.com"
+                || host == "yt3.ggpht.com"
+                || host == "yt3.googleusercontent.com"
+                || host.ends_with(".googleusercontent.com")
+                || config
+                    .invidious_instances
+                    .iter()
+                    .any(|instance| host_matches(instance, &host))
+        }
         Purpose::Avatar => {
             host == "googleusercontent.com" || host.ends_with(".googleusercontent.com")
         }
@@ -255,6 +269,28 @@ mod tests {
             )
             .is_ok()
         );
+    }
+
+    #[test]
+    fn image_proxy_allows_only_known_image_hosts() {
+        let config = config();
+        assert!(
+            validate(
+                "https://yt.chocolatemoo53.com/vi/abcdefghijk/maxres.jpg",
+                Purpose::Image,
+                &config
+            )
+            .is_ok()
+        );
+        assert!(
+            validate(
+                "https://i.ytimg.com/vi/abcdefghijk/hqdefault.jpg",
+                Purpose::Image,
+                &config
+            )
+            .is_ok()
+        );
+        assert!(validate("https://evil.example/tracker.png", Purpose::Image, &config).is_err());
     }
 
     #[test]

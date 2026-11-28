@@ -50,6 +50,10 @@ pub fn handle(mut request: Request, config: &Config) {
             dash_manifest(request, &url, config);
             return;
         }
+        if path == "/api/image" {
+            image_proxy(request, &url, config);
+            return;
+        }
 
         if let Some(source) = binary_source(&path, &url, config) {
             match source {
@@ -517,6 +521,78 @@ fn sane_range(raw: &str) -> Option<String> {
         return None;
     }
     Some(format!("bytes={start}-{end}"))
+}
+
+/// Same-origin image proxy. Metadata APIs provide the thumbnail URLs (as in
+/// FreeTube); we validate and fetch them server-side so the browser never
+/// contacts an image host directly.
+fn image_proxy(request: Request, url: &Url, config: &Config) {
+    let raw = param(url, "u");
+    if raw.is_empty() {
+        json_reply(
+            request,
+            400,
+            json!({ "error": "Missing image URL." }),
+            Vec::new(),
+        );
+        return;
+    }
+    // Relative API URLs are tried against every configured instance because
+    // metadata requests fail over between instances.
+    let locations: Vec<String> = if let Some(rest) = raw.strip_prefix("//") {
+        vec![format!("https://{rest}")]
+    } else if raw.starts_with('/') {
+        if config.invidious_instances.is_empty() {
+            json_reply(
+                request,
+                502,
+                json!({ "error": "No Invidious instance configured." }),
+                Vec::new(),
+            );
+            return;
+        }
+        let mut locations = Vec::new();
+        let mut error = None;
+        for instance in &config.invidious_instances {
+            match Url::parse(instance).and_then(|base| base.join(&raw)) {
+                Ok(resolved) => locations.push(resolved.to_string()),
+                Err(failure) => error = Some(failure.to_string()),
+            }
+        }
+        if locations.is_empty() {
+            json_reply(
+                request,
+                400,
+                json!({ "error": error.unwrap_or_default() }),
+                Vec::new(),
+            );
+            return;
+        }
+        locations
+    } else {
+        vec![raw]
+    };
+    let mut last_error = "No image source available.".to_string();
+    for location in locations {
+        match api::fetch_binary(&location, Purpose::Image, config, THUMBNAIL_CAP) {
+            Ok((body, content_type)) if content_type.starts_with("image/") => {
+                reply(
+                    request,
+                    200,
+                    body,
+                    &content_type,
+                    vec![(
+                        "Cache-Control".to_string(),
+                        "public, max-age=86400".to_string(),
+                    )],
+                );
+                return;
+            }
+            Ok(_) => last_error = "Upstream did not return an image.".to_string(),
+            Err(error) => last_error = error,
+        }
+    }
+    json_reply(request, 502, json!({ "error": last_error }), Vec::new());
 }
 
 fn launch_player(id: &str, config: &Config) -> Result<(), String> {
