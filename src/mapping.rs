@@ -7,6 +7,23 @@ pub fn valid_video_id(id: &str) -> bool {
             .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'-')
 }
 
+pub fn blocked_channel(value: &Value, adblock_enabled: bool) -> bool {
+    if !adblock_enabled {
+        return false;
+    }
+    let id = value
+        .get("authorId")
+        .or_else(|| value.get("channelId"))
+        .and_then(Value::as_str)
+        .unwrap_or("");
+    !id.is_empty()
+        && include_str!("../assets/adblock-rules.txt")
+            .lines()
+            .map(str::trim)
+            .filter_map(|line| line.strip_prefix("channel:"))
+            .any(|blocked| blocked == id)
+}
+
 fn text(value: &Value, key: &str) -> String {
     value
         .get(key)

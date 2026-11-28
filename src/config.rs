@@ -2,7 +2,10 @@ use rand::{RngCore, rng};
 use std::env;
 use std::fs;
 use std::path::PathBuf;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
+#[derive(Clone)]
 pub struct Config {
     pub port: u16,
     pub app_origin: String,
@@ -16,6 +19,9 @@ pub struct Config {
     pub strict_port: bool,
     pub port_in_use_fallback: bool,
     pub secure_cookies: bool,
+    pub adblock_enabled: Arc<AtomicBool>,
+    settings_path: PathBuf,
+    pub data_dir: PathBuf,
 }
 
 impl Config {
@@ -58,6 +64,29 @@ impl Config {
             .map(|value| value.trim().trim_end_matches('/').to_string())
             .filter(|value| !value.is_empty())
             .collect();
+        let data_dir = env::var_os("SOURCETUBE_DATA")
+            .map(PathBuf::from)
+            .or_else(|| {
+                env::var_os("XDG_DATA_HOME")
+                    .map(PathBuf::from)
+                    .map(|path| path.join("sourcetube"))
+            })
+            .or_else(|| {
+                env::var_os("HOME")
+                    .map(PathBuf::from)
+                    .map(|path| path.join(".local/share/sourcetube"))
+            })
+            .unwrap_or_else(|| PathBuf::from("sourcetube-data"));
+        let settings_path = data_dir.join("settings.json");
+        let adblock_enabled = fs::read_to_string(&settings_path)
+            .ok()
+            .and_then(|text| serde_json::from_str::<serde_json::Value>(&text).ok())
+            .and_then(|value| {
+                value
+                    .get("adblockEnabled")
+                    .and_then(serde_json::Value::as_bool)
+            })
+            .unwrap_or(true);
 
         Self {
             port: requested_port,
@@ -73,7 +102,28 @@ impl Config {
                 .is_ok_and(|value| value == "1" || value.eq_ignore_ascii_case("true")),
             port_in_use_fallback: false,
             secure_cookies,
+            adblock_enabled: Arc::new(AtomicBool::new(adblock_enabled)),
+            settings_path,
+            data_dir,
         }
+    }
+
+    pub fn adblock_enabled(&self) -> bool {
+        self.adblock_enabled.load(Ordering::Relaxed)
+    }
+
+    pub fn set_adblock_enabled(&self, enabled: bool) -> Result<(), String> {
+        if let Some(parent) = self.settings_path.parent() {
+            fs::create_dir_all(parent).map_err(|error| error.to_string())?;
+        }
+        let content = serde_json::json!({ "adblockEnabled": enabled });
+        fs::write(
+            &self.settings_path,
+            serde_json::to_vec_pretty(&content).map_err(|error| error.to_string())?,
+        )
+        .map_err(|error| error.to_string())?;
+        self.adblock_enabled.store(enabled, Ordering::Relaxed);
+        Ok(())
     }
 
     pub fn runtime_dir() -> PathBuf {

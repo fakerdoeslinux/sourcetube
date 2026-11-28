@@ -1,0 +1,17 @@
+# SourceTube local outbound ad/tracker deny list.
+# Syntax: domain:<exact host and subdomains> or channel:<Invidious channel ID>.
+domain:doubleclick.net
+domain:googlesyndication.com
+domain:googleadservices.com
+domain:adservice.google.com
+domain:googletagmanager.com
+domain:google-analytics.com
+domain:analytics.google.com
+domain:segment.io
+domain:segment.com
+domain:mixpanel.com
+domain:amplitude.com
+domain:hotjar.com
+domain:scorecardresearch.com
+domain:quantserve.com
+domain:ads-twitter.com

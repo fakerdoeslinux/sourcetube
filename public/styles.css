@@ -236,6 +236,25 @@ main.wide { margin-left: 0; }
   border-radius: var(--radius);
   background: #000;
 }
+.player-tools { display: flex; justify-content: flex-end; min-height: 42px; padding-top: 8px; }
+.settings-panel { max-width: 720px; padding: 18px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg-elev); }
+.settings-panel h2, .settings-panel h3 { margin: 0 0 12px; }
+.settings-panel h3 { margin-top: 22px; text-transform: capitalize; }
+.setting-row { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 12px 0; border-top: 1px solid var(--line); }
+.setting-row input { width: 18px; height: 18px; accent-color: var(--red); }
+.settings-section { margin-top: 24px !important; }
+.transfer-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+.upload-label { cursor: pointer; }
+.transfer-stages { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 20px 0; }
+.transfer-card { padding: 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg-elev); }
+.transfer-card strong { display: block; text-transform: capitalize; }
+.transfer-card span { display: inline-block; margin-top: 8px; color: var(--muted); text-transform: capitalize; }
+.transfer-card.done span { color: var(--green); }
+.transfer-card.running { border-color: var(--red); }
+.transfer-card p { margin: 8px 0 0; color: var(--muted); }
+.transfer-error { color: #ff746c; }
+.transfer-counts { display: flex; flex-wrap: wrap; gap: 8px; }
+.transfer-counts span { padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px; text-transform: capitalize; }
 .video-title { font-size: 20px; line-height: 1.35; margin: 16px 0 10px; }
 .video-byline { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .channel { display: flex; align-items: center; gap: 10px; }

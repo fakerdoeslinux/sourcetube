@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VERSION="${VERSION:-1.1.2}"
+VERSION="${VERSION:-1.1.3}"
 OUTPUT="${OUTPUT:-$ROOT/dist/SourceTube-x86_64.AppImage}"
 CACHE="$ROOT/build/cache"
 APPDIR="$ROOT/build/SourceTube.AppDir"
@@ -21,7 +21,7 @@ mkdir -p "$ROOT/dist" "$CACHE" \
 
 cp "$ROOT/target/release/sourcetube" "$APPDIR/usr/bin/sourcetube"
 cp "$ROOT/target/release/sourcetube-player" "$APPDIR/usr/bin/sourcetube-player"
-cp "$ROOT/public/"* "$APPDIR/usr/share/sourcetube/public/"
+cp -R "$ROOT/public/." "$APPDIR/usr/share/sourcetube/public/"
 cp "$ROOT/.env.example" "$APPDIR/usr/share/sourcetube/.env.example"
 cp "$ROOT/public/icon.svg" "$APPDIR/usr/share/icons/hicolor/scalable/apps/sourcetube.svg"
 rsvg-convert -w 256 -h 256 "$ROOT/public/icon.svg" -o "$APPDIR/usr/share/icons/hicolor/256x256/apps/sourcetube.png"

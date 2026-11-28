@@ -1,6 +1,6 @@
 # Google OAuth setup for SourceTube
 
-Google sign-in is server-side OAuth with PKCE. Public search and trending do not need a Google API key.
+Google sign-in is server-side OAuth with PKCE. Public search and trending do not need a Google API key. Account transfer requests only the read-only `https://www.googleapis.com/auth/youtube.readonly` scope; it cannot edit the account or upload videos.
 
 ## Do I need to pay Google?
 
@@ -20,7 +20,7 @@ If you skip OAuth entirely, SourceTube still works anonymously through the confi
    - Add scopes: `openid`, `email`, `profile`, `https://www.googleapis.com/auth/youtube.readonly`
 4. Go to **Credentials → Create credentials → OAuth client ID**.
 5. Application type: **Web application**.
-6. Under **Authorized redirect URIs**, add the exact URI:
+6. Under **Authorized redirect URIs**, add the exact URI. For automatic fallback, authorize all ports from `8787` through `8806` as shown below.
 
    ```text
    http://localhost:8787/api/auth/callback
@@ -75,9 +75,43 @@ OAuth is wired when you see:
 
 Then click **Sign in with Google** in the app. After callback, `/api/me` returns the signed-in profile and subscriptions become available.
 
+## Transfer account data
+
+1. Sign in, then open **Transfer** or visit `http://localhost:<selected-port>/transfer`.
+2. Select **Start Google import** to fetch subscriptions and channel metadata, playlists and their items, Watch Later when Google exposes it, and liked videos when available.
+3. To add Google Takeout data, export YouTube data in JSON format from Google Takeout, then select matching watch-history, likes, playlists, subscriptions, or comments JSON files on the Transfer page.
+4. Files are posted only to the local SourceTube server and stored in `SOURCETUBE_DATA/transfer.sqlite3`. Records merge by their video, channel, playlist, or comment IDs; files are not sent to Google or another third party.
+
+The database has a SQLite schema version and a 256 MiB page limit. Signing out at `/signin` clears the encrypted session cookie; imported local records remain on this device.
+
 ## Port fallback gotcha
 
 OAuth is bound to the redirect URI port. If `8787` is busy, the app falls back to `8788`, `8789`, etc., but Google will reject the sign-in unless that port is also authorized.
+
+For the automatic port fallback, add every redirect URI from port `8787` through `8806`:
+
+```text
+http://localhost:8787/api/auth/callback
+http://localhost:8788/api/auth/callback
+http://localhost:8789/api/auth/callback
+http://localhost:8790/api/auth/callback
+http://localhost:8791/api/auth/callback
+http://localhost:8792/api/auth/callback
+http://localhost:8793/api/auth/callback
+http://localhost:8794/api/auth/callback
+http://localhost:8795/api/auth/callback
+http://localhost:8796/api/auth/callback
+http://localhost:8797/api/auth/callback
+http://localhost:8798/api/auth/callback
+http://localhost:8799/api/auth/callback
+http://localhost:8800/api/auth/callback
+http://localhost:8801/api/auth/callback
+http://localhost:8802/api/auth/callback
+http://localhost:8803/api/auth/callback
+http://localhost:8804/api/auth/callback
+http://localhost:8805/api/auth/callback
+http://localhost:8806/api/auth/callback
+```
 
 Pick one:
 

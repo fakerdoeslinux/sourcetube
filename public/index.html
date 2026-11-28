@@ -34,16 +34,18 @@
     <nav class="sidebar" id="sidebar" aria-label="Main navigation">
       <a class="nav-item active" href="#/" data-nav="home"><span class="glyph">⌂</span>Home</a>
       <a class="nav-item" href="#/subscriptions" data-nav="subscriptions"><span class="glyph">▣</span>Subscriptions</a>
+      <a class="nav-item" href="/transfer" data-nav="transfer"><span class="glyph">⇄</span>Transfer</a>
       <div class="nav-sep"></div>
       <p class="nav-title">You</p>
       <a class="nav-item" href="#/library" data-nav="library"><span class="glyph">◷</span>Library</a>
+      <a class="nav-item" href="#/settings" data-nav="settings"><span class="glyph">⚙</span>Settings</a>
       <div class="nav-sep"></div>
       <p class="nav-title">Privacy</p>
       <p class="privacy-pill">no trackers</p>
       <p class="privacy-pill">no Google JS</p>
       <p class="privacy-pill">proxy metadata</p>
       <div class="nav-sep"></div>
-      <p class="footer-note">SourceTube 1.1.2<br>built on the open web</p>
+      <p class="footer-note">SourceTube 1.1.3<br>built on the open web</p>
     </nav>
 
     <main id="view" tabindex="-1"></main>
@@ -51,6 +53,7 @@
 
   <div class="scrim" id="scrim" hidden></div>
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <script src="/vendor/dash.all.min.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>

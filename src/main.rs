@@ -3,12 +3,14 @@ mod auth;
 mod config;
 mod http;
 mod mapping;
+mod transfer;
 
 use config::Config;
 use std::net::SocketAddr;
 
 fn main() {
     let mut config = Config::load();
+    let default_redirect_uri = format!("{}/api/auth/callback", config.app_origin);
     let (server, bound_port) = match bind(&config) {
         Ok(value) => value,
         Err(error) => {
@@ -27,7 +29,7 @@ fn main() {
         let host = config.app_origin.split("://").nth(1).unwrap_or("localhost");
         let host = host.split(':').next().unwrap_or("localhost");
         config.app_origin = format!("{scheme}://{host}:{bound_port}");
-        if config.redirect_uri.starts_with(&config.app_origin) {
+        if config.redirect_uri == default_redirect_uri {
             config.redirect_uri = format!("{}/api/auth/callback", config.app_origin);
         }
     }

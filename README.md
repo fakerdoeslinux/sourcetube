@@ -2,16 +2,22 @@
 
 Privacy-first, open-source YouTube client with a 2018-style dark interface, built in Rust.
 
-SourceTube keeps Google scripts, analytics, and third-party trackers out of the page. Public metadata comes from a FreeTube-compatible Invidious instance through the SourceTube server, so your browser does not talk to Google for listings. Google sign-in uses OAuth with a read-only YouTube scope for subscriptions and personalized recommendations.
+SourceTube keeps Google scripts, analytics, and third-party trackers out of the page. Public metadata comes from a FreeTube-compatible Invidious instance through the SourceTube server, so your browser does not talk to Google for listings. Google sign-in uses OAuth with a read-only YouTube scope for subscriptions.
 
 ## Features
 
 - 2018 YouTube-style layout, dark theme by default
 - Rust server and Rust native-player launcher; small resident memory
 - Google sign-in for subscriptions and personalized recommendations
+- Google account transfer for subscriptions, channels, playlists, Watch Later, and available liked videos
+- Local Takeout JSON import for watch history, likes, playlists, subscriptions, and comments
 - Search, trending, watch pages, related videos
-- Native low-RAM playback through mpv/libmpv, with privacy-enhanced embed fallback
+- Browser playback through a bundled DASH player with media proxied server-side
+- Native low-RAM playback through mpv/libmpv
+- SponsorBlock categories, optional automatic skipping, and chapter markers
+- Bundled host filtering for outbound ad/tracker requests
 - Local watch history stored only in your browser
+- Imported transfer data stored locally in SQLite under `SOURCETUBE_DATA`
 - No analytics, no ad scripts, no third-party trackers
 - Metadata and thumbnails proxied through SourceTube
 - Strict CSP and locked-down security headers
@@ -22,7 +28,7 @@ SourceTube keeps Google scripts, analytics, and third-party trackers out of the 
 SourceTube removes trackers from the client, but YouTube is still YouTube:
 
 - Sign-in goes to Google's OAuth service.
-- Video playback streams from YouTube while the video is playing.
+- Video streams are fetched by the SourceTube server from the configured Invidious instance and permitted Google video hosts.
 - Signed-in subscription requests go from the SourceTube server to the YouTube Data API with your read-only token.
 - Public metadata comes from the configured Invidious instance, not from your browser.
 - Watch history is not uploaded by SourceTube.
@@ -60,7 +66,7 @@ If your distro lacks FUSE, run:
 ./SourceTube-x86_64.AppImage --appimage-extract-and-run
 ```
 
-Put your `.env` file in `~/.config/sourcetube/.env` or next to the AppImage before starting it. The AppImage ships the Rust server, the Rust native-player launcher, and the original SourceTube icon. Native playback needs `mpv` or `libmpv.so.2` installed on the host; without it, use the embedded player.
+Put your `.env` file in `~/.config/sourcetube/.env` or next to the AppImage before starting it. The AppImage ships the Rust server, native-player launcher, DASH.js, and SourceTube icons. Browser DASH playback is proxied through the server; it does not embed YouTube. Native playback needs `mpv` or `libmpv.so.2` installed on the host.
 
 ### From source
 
@@ -108,7 +114,7 @@ Set `APP_ORIGIN` in `.env` to the public URL. For remote use, put SourceTube beh
 
 - Search from the top bar.
 - Use the left drawer for Home, Subscriptions, and Local library.
-- Videos open in the privacy-enhanced embed.
+- Videos play in the bundled DASH.js player with manifest and segment requests proxied by SourceTube.
 - Use **Native player** on a watch page to hand the stream to mpv/libmpv. On web-client deployments, the player starts on the machine running the SourceTube server.
 
 ## Build from source
@@ -133,7 +139,8 @@ Individual builds:
 
 - No external JavaScript loaded by the frontend.
 - No analytics, telemetry, pixel, or ad network.
-- Thumbnails and avatars are reverse-proxied.
+- Thumbnails, avatars, DASH manifests, and DASH byte ranges are proxied through an HTTPS host allowlist.
+- Outbound proxy requests reject private IP ranges and known ad/tracker domains; bundled rules require no external list.
 - Strict CSP: `default-src 'self'`, scripts and styles only from SourceTube.
 - `Referrer-Policy: no-referrer`.
 - `Cross-Origin-Opener-Policy: same-origin`.
