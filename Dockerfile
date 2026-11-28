@@ -2,6 +2,7 @@ FROM rust:1.100-bookworm AS builder
 WORKDIR /app
 COPY Cargo.toml Cargo.lock ./
 COPY src ./src
+COPY assets ./assets
 RUN cargo build --release
 
 FROM debian:bookworm-slim
@@ -14,6 +15,7 @@ COPY public /usr/share/sourcetube/public
 ENV PORT=8787 \
     APP_ORIGIN=http://localhost:8787 \
     SOURCETUBE_PUBLIC=/usr/share/sourcetube/public \
-    SOURCETUBE_PLAYER=/usr/local/bin/sourcetube-player
+    SOURCETUBE_PLAYER=/usr/local/bin/sourcetube-player \
+    SOURCETUBE_DATA=/var/lib/sourcetube
 EXPOSE 8787
 CMD ["sourcetube"]

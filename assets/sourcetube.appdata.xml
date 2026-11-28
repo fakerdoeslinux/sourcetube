@@ -6,7 +6,8 @@
   <name>SourceTube</name>
   <summary>Privacy-first open-source YouTube client</summary>
   <description>
-    <p>SourceTube is a privacy-focused YouTube client with a 2018-style dark interface. It proxies metadata, blocks trackers, and uses privacy-enhanced video embeds.</p>
+    <p>SourceTube is a privacy-focused YouTube client with a sharp-cornered, monospace dark interface. It proxies metadata, blocks trackers, and plays video through a bundled DASH player served from its own origin.</p>
+    <p>Version 1.1.3 adds same-origin DASH playback, SponsorBlock, local adblock, Google sign-in with a transfer wizard, and a new original icon.</p>
   </description>
   <launchable type="desktop-id">io.github.fakerdoeslinux.sourcetube.desktop</launchable>
   <url type="homepage">https://github.com/fakerdoeslinux/sourcetube</url>
@@ -16,6 +17,10 @@
     <binary>sourcetube</binary>
   </provides>
   <releases>
-    <release version="1.1.2" date="2026-11-27"/>
+    <release version="1.1.3" date="2026-11-27">
+      <description>
+        <p>Same-origin DASH playback, SponsorBlock, bundled adblock rules, Google transfer wizard, local font and new icon.</p>
+      </description>
+    </release>
   </releases>
 </component>

@@ -1,11 +1,12 @@
 use crate::auth::Session;
 use crate::config::Config;
+use crate::guard::{self, Purpose};
 use serde_json::{Value, json};
 use std::sync::OnceLock;
 use ureq::tls::{TlsConfig, TlsProvider};
 use url::Url;
 
-const UA: &str = "SourceTube/1.1 (+privacy-first YouTube client)";
+const UA: &str = "SourceTube/1.1.3 (+privacy-first YouTube client)";
 static AGENT: OnceLock<ureq::Agent> = OnceLock::new();
 
 pub fn agent() -> &'static ureq::Agent {
@@ -16,9 +17,84 @@ pub fn agent() -> &'static ureq::Agent {
                     .provider(TlsProvider::NativeTls)
                     .build(),
             )
+            // Status codes are handled explicitly by fetch() so callers can
+            // distinguish SponsorBlock 404 from a real upstream failure.
+            .http_status_as_error(false)
             .build()
             .new_agent()
     })
+}
+
+#[derive(Debug)]
+pub struct Fetch {
+    pub status: u16,
+    pub body: Vec<u8>,
+    pub content_type: String,
+    pub content_range: Option<String>,
+    pub accept_ranges: Option<String>,
+    pub content_length: Option<String>,
+}
+
+fn header(response: &ureq::http::Response<ureq::Body>, name: &str) -> Option<String> {
+    response
+        .headers()
+        .get(name)
+        .and_then(|value| value.to_str().ok())
+        .map(str::to_string)
+}
+
+/// The single guarded outbound fetch used by every proxy endpoint.
+pub fn fetch(
+    raw: &str,
+    purpose: Purpose,
+    config: &Config,
+    range: Option<&str>,
+    max_bytes: usize,
+) -> Result<Fetch, String> {
+    let url = guard::validate(raw, purpose, config)?;
+    let mut request = agent()
+        .get(url.as_str())
+        .header("Accept", "*/*")
+        .header("User-Agent", UA);
+    if let Some(range) = range {
+        request = request.header("Range", range);
+    }
+    let mut response = request.call().map_err(|error| error.to_string())?;
+    let status = response.status().as_u16();
+    let content_type =
+        header(&response, "content-type").unwrap_or_else(|| "application/octet-stream".to_string());
+    let content_range = header(&response, "content-range");
+    let accept_ranges = header(&response, "accept-ranges");
+    let content_length = header(&response, "content-length");
+    let body = response
+        .body_mut()
+        .with_config()
+        .limit(max_bytes as u64)
+        .read_to_vec()
+        .map_err(|error| format!("Upstream response exceeded the size cap: {error}"))?;
+    if body.len() > max_bytes {
+        return Err("Upstream response exceeded the size cap.".into());
+    }
+    Ok(Fetch {
+        status,
+        body,
+        content_type,
+        content_range,
+        accept_ranges,
+        content_length,
+    })
+}
+
+pub fn fetch_json(
+    raw: &str,
+    purpose: Purpose,
+    config: &Config,
+    max_bytes: usize,
+) -> Result<(u16, Value), String> {
+    let fetched = fetch(raw, purpose, config, None, max_bytes)?;
+    let text = String::from_utf8_lossy(&fetched.body);
+    let value = serde_json::from_str(&text).unwrap_or_else(|_| json!({}));
+    Ok((fetched.status, value))
 }
 
 pub fn invidious(path: &str, params: &[(&str, &str)], config: &Config) -> Result<Value, String> {
@@ -32,23 +108,18 @@ pub fn invidious(path: &str, params: &[(&str, &str)], config: &Config) -> Result
                 pairs.append_pair(name, value);
             }
         }
-        match agent()
-            .get(url.as_str())
-            .header("Accept", "application/json")
-            .header("User-Agent", UA)
-            .call()
-        {
-            Ok(mut response) => match response.body_mut().read_to_string() {
-                Ok(text) => return serde_json::from_str(&text).map_err(|error| error.to_string()),
-                Err(error) => last_error = error.to_string(),
-            },
-            Err(error) => last_error = error.to_string(),
+        match fetch_json(url.as_str(), Purpose::Invidious, config, 8 * 1024 * 1024) {
+            Ok((200, value)) => return Ok(value),
+            Ok((status, _)) => last_error = format!("Invidious returned HTTP {status}"),
+            Err(error) => last_error = error,
         }
     }
     Err(last_error)
 }
 
-fn youtube(
+/// YouTube Data API call with either an OAuth token or optional API key.
+/// Public browsing never calls this function.
+pub fn youtube(
     path: &str,
     params: &[(&str, &str)],
     access_token: Option<&str>,
@@ -65,19 +136,34 @@ fn youtube(
             pairs.append_pair("key", &config.youtube_api_key);
         }
     }
+    guard::validate(url.as_str(), Purpose::Google, config)?;
+    let auth = access_token
+        .filter(|token| !token.is_empty())
+        .map(|token| format!("Bearer {token}"));
     let mut request = agent()
         .get(url.as_str())
         .header("Accept", "application/json")
         .header("User-Agent", UA);
-    if let Some(token) = access_token {
-        request = request.header("Authorization", &format!("Bearer {token}"));
+    if let Some(auth) = auth.as_deref() {
+        request = request.header("Authorization", auth);
     }
-    let mut response = request.call().map_err(|error| error.to_string())?;
+    let response = request.call().map_err(|error| error.to_string())?;
+    let status = response.status().as_u16();
     let text = response
-        .body_mut()
+        .into_body()
+        .with_config()
+        .limit(4 * 1024 * 1024)
         .read_to_string()
         .map_err(|error| error.to_string())?;
     let value: Value = serde_json::from_str(&text).map_err(|error| error.to_string())?;
+    if status >= 400 {
+        return Err(value
+            .get("error")
+            .and_then(|error| error.get("message"))
+            .and_then(Value::as_str)
+            .map(str::to_string)
+            .unwrap_or_else(|| format!("YouTube Data API returned HTTP {status}")));
+    }
     if let Some(message) = value
         .get("error")
         .and_then(|error| error.get("message"))
@@ -88,23 +174,17 @@ fn youtube(
     Ok(value)
 }
 
-pub fn fetch_binary(url: &str) -> Result<(Vec<u8>, String), String> {
-    let mut response = agent()
-        .get(url)
-        .header("User-Agent", UA)
-        .call()
-        .map_err(|error| error.to_string())?;
-    let content_type = response
-        .headers()
-        .get("content-type")
-        .and_then(|value| value.to_str().ok())
-        .unwrap_or("application/octet-stream")
-        .to_string();
-    let bytes = response
-        .body_mut()
-        .read_to_vec()
-        .map_err(|error| error.to_string())?;
-    Ok((bytes, content_type))
+pub fn fetch_binary(
+    url: &str,
+    purpose: Purpose,
+    config: &Config,
+    max_bytes: usize,
+) -> Result<(Vec<u8>, String), String> {
+    let fetched = fetch(url, purpose, config, None, max_bytes)?;
+    if fetched.status != 200 {
+        return Err(format!("Upstream returned HTTP {}", fetched.status));
+    }
+    Ok((fetched.body, fetched.content_type))
 }
 
 pub fn subscription_videos(session: &Session, config: &Config) -> Result<Vec<Value>, String> {

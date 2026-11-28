@@ -3,6 +3,7 @@ use std::env;
 use std::fs;
 use std::path::PathBuf;
 
+#[derive(Clone)]
 pub struct Config {
     pub port: u16,
     pub app_origin: String,
@@ -12,6 +13,9 @@ pub struct Config {
     pub youtube_api_key: String,
     pub session_secret: [u8; 32],
     pub invidious_instances: Vec<String>,
+    /// Companion media hosts allowed by the DASH segment proxy, in addition
+    /// to configured Invidious hosts and *.googlevideo.com.
+    pub allowed_hosts: Vec<String>,
     pub public_dir: PathBuf,
     pub strict_port: bool,
     pub port_in_use_fallback: bool,
@@ -68,12 +72,31 @@ impl Config {
             youtube_api_key: env::var("YOUTUBE_API_KEY").unwrap_or_default(),
             session_secret,
             invidious_instances,
+            allowed_hosts: env::var("SOURCETUBE_ALLOWED_HOSTS")
+                .unwrap_or_default()
+                .split(',')
+                .map(|value| value.trim().trim_end_matches('.').to_ascii_lowercase())
+                .filter(|value| !value.is_empty())
+                .collect(),
             public_dir: discover_public_dir(),
             strict_port: env::var("STRICT_PORT")
                 .is_ok_and(|value| value == "1" || value.eq_ignore_ascii_case("true")),
             port_in_use_fallback: false,
             secure_cookies,
         }
+    }
+
+    pub fn data_dir() -> PathBuf {
+        env::var_os("SOURCETUBE_DATA")
+            .map(PathBuf::from)
+            .or_else(|| {
+                env::var_os("XDG_DATA_HOME").map(|value| PathBuf::from(value).join("sourcetube"))
+            })
+            .or_else(|| {
+                env::var_os("HOME")
+                    .map(|value| PathBuf::from(value).join(".local/share/sourcetube"))
+            })
+            .unwrap_or_else(|| PathBuf::from("sourcetube-data"))
     }
 
     pub fn runtime_dir() -> PathBuf {

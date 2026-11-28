@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VERSION="${VERSION:-1.1.2}"
+VERSION="${VERSION:-1.1.3}"
 OUTPUT="${OUTPUT:-$ROOT/dist/SourceTube-x86_64.AppImage}"
 CACHE="$ROOT/build/cache"
 APPDIR="$ROOT/build/SourceTube.AppDir"
@@ -14,18 +14,28 @@ rm -rf "$APPDIR"
 mkdir -p "$ROOT/dist" "$CACHE" \
   "$APPDIR/usr/bin" \
   "$APPDIR/usr/share/sourcetube/public" \
+  "$APPDIR/usr/share/icons/hicolor/16x16/apps" \
+  "$APPDIR/usr/share/icons/hicolor/32x32/apps" \
+  "$APPDIR/usr/share/icons/hicolor/48x48/apps" \
+  "$APPDIR/usr/share/icons/hicolor/64x64/apps" \
+  "$APPDIR/usr/share/icons/hicolor/128x128/apps" \
   "$APPDIR/usr/share/icons/hicolor/256x256/apps" \
+  "$APPDIR/usr/share/icons/hicolor/512x512/apps" \
   "$APPDIR/usr/share/icons/hicolor/scalable/apps" \
   "$APPDIR/usr/share/applications" \
   "$APPDIR/usr/share/metainfo"
 
 cp "$ROOT/target/release/sourcetube" "$APPDIR/usr/bin/sourcetube"
 cp "$ROOT/target/release/sourcetube-player" "$APPDIR/usr/bin/sourcetube-player"
-cp "$ROOT/public/"* "$APPDIR/usr/share/sourcetube/public/"
+cp -R "$ROOT/public/"* "$APPDIR/usr/share/sourcetube/public/"
+cp "$ROOT/assets/adblock-rules.txt" "$APPDIR/usr/share/sourcetube/adblock-rules.txt"
 cp "$ROOT/.env.example" "$APPDIR/usr/share/sourcetube/.env.example"
 cp "$ROOT/public/icon.svg" "$APPDIR/usr/share/icons/hicolor/scalable/apps/sourcetube.svg"
-rsvg-convert -w 256 -h 256 "$ROOT/public/icon.svg" -o "$APPDIR/usr/share/icons/hicolor/256x256/apps/sourcetube.png"
+for size in 16 32 48 64 128 256 512; do
+  rsvg-convert -w "$size" -h "$size" "$ROOT/public/icon.svg" -o "$APPDIR/usr/share/icons/hicolor/${size}x${size}/apps/sourcetube.png"
+done
 cp "$APPDIR/usr/share/icons/hicolor/256x256/apps/sourcetube.png" "$APPDIR/sourcetube.png"
+cp "$ROOT/assets/sourcetube.ico" "$APPDIR/usr/share/sourcetube/sourcetube.ico"
 
 TOOL="$CACHE/appimagetool-x86_64.AppImage"
 if [ ! -f "$TOOL" ]; then

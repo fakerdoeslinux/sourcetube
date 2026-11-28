@@ -1,0 +1,49 @@
+# SourceTube bundled privacy rules.
+# Local file only: no runtime filter-list downloads, no third-party scripts.
+# ||host^ blocks that host and all of its subdomains.
+# channel:<id> hides metadata from a channel that only serves promotions.
+
+||doubleclick.net^
+||googlesyndication.com^
+||google-analytics.com^
+||googleadservices.com^
+||googletagmanager.com^
+||googleadapis.l.google.com^
+||adservice.google.com^
+||pagead2.googlesyndication.com^
+||analytics.google.com^
+||ads.youtube.com^
+||ad.youtube.com^
+||s0.2mdn.net^
+||2mdn.net^
+||scorecardresearch.com^
+||quantserve.com^
+||facebook.net^
+||connect.facebook.net^
+||pixel.quantserve.com^
+||bat.bing.com^
+||taboola.com^
+||outbrain.com^
+||criteo.com^
+||amazon-adsystem.com^
+||adnxs.com^
+||rubiconproject.com^
+||pubmatic.com^
+||openx.net^
+||casalemedia.com^
+||adsrvr.org^
+||doubleverify.com^
+||moatads.com^
+||adsafeprotected.com^
+||chartbeat.net^
+||newrelic.com^
+||nr-data.net^
+||sentry.io^
+||mixpanel.com^
+||amplitude.com^
+||segment.com^
+||hotjar.com^
+||matomo.cloud^
+
+# Promotional channels (channels only; public videos are not blocked by title).
+channel:UCadsample00000000000000

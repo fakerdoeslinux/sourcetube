@@ -1,32 +1,43 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
-  <title id="title">SourceTube</title>
-  <desc id="desc">A red play window cut from an open-source bracket, with a green fork tail.</desc>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="SourceTube">
   <defs>
-    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#242424"/>
-      <stop offset="1" stop-color="#0d0d0d"/>
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e62117"/>
+      <stop offset="0.46" stop-color="#7d2420"/>
+      <stop offset="0.72" stop-color="#d7dce2"/>
+      <stop offset="1" stop-color="#4a4f55"/>
     </linearGradient>
-    <linearGradient id="red" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ff5a4f"/>
-      <stop offset="0.55" stop-color="#ed2017"/>
-      <stop offset="1" stop-color="#a70d08"/>
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.55" stop-color="#e6ebf0"/>
+      <stop offset="1" stop-color="#9ba6b2"/>
     </linearGradient>
-    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#71ef9f"/>
-      <stop offset="1" stop-color="#23a95c"/>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff3b30"/>
+      <stop offset="1" stop-color="#c3140b"/>
     </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000" flood-opacity="0.45"/>
-    </filter>
+    <radialGradient id="shadow" cx="0.5" cy="1" r="0.9">
+      <stop offset="0" stop-color="#000000" stop-opacity="0.8"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="squircle">
+      <rect x="18" y="18" width="476" height="476" rx="112"/>
+    </clipPath>
   </defs>
-  <rect x="10" y="10" width="236" height="236" rx="54" fill="url(#tile)" stroke="#3b3b3b" stroke-width="4"/>
-  <g filter="url(#shadow)">
-    <path d="M52 72h152c14 0 24 11 24 25v62c0 14-10 25-24 25H52c-14 0-24-11-24-25V97c0-14 10-25 24-25Z" fill="url(#red)"/>
-    <path d="M112 94 169 128l-57 34Z" fill="#fff"/>
+
+  <g clip-path="url(#squircle)">
+    <rect x="18" y="18" width="476" height="476" fill="#101012"/>
+    <rect x="18" y="294" width="476" height="218" fill="url(#shadow)"/>
+    <!-- The SourceTube signature: three eyes hiding in the lower shadow. -->
+    <g fill="#e62117" opacity="0.34">
+      <ellipse cx="196" cy="386" rx="9" ry="5"/>
+      <ellipse cx="256" cy="398" rx="9" ry="5"/>
+      <ellipse cx="316" cy="386" rx="9" ry="5"/>
+    </g>
+    <!-- Silver play tube: a hollow, angled tube rather than a copied play triangle. -->
+    <path d="M176 146 L356 256 L176 366 L176 312 L270 256 L176 200 Z" fill="url(#steel)"/>
+    <path d="M176 146 L206 164 L206 348 L176 366 Z" fill="url(#accent)"/>
+    <path d="M176 146 L356 256 L326 276 L176 190 Z" fill="#ffffff" opacity="0.18"/>
   </g>
-  <path d="M69 35H45v186h24" fill="none" stroke="url(#green)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M187 35h24v186h-24" fill="none" stroke="url(#green)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="45" cy="128" r="9" fill="#71ef9f"/>
-  <circle cx="211" cy="128" r="9" fill="#71ef9f"/>
-  <path d="M69 128h-24M211 128h-24" stroke="#71ef9f" stroke-width="7" stroke-linecap="round"/>
+  <rect x="18" y="18" width="476" height="476" rx="112" fill="none" stroke="url(#rim)" stroke-width="7"/>
 </svg>

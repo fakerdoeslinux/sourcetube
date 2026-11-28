@@ -4,11 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
-  <meta name="description" content="SourceTube — a privacy-first, open-source YouTube client with a 2018 dark layout.">
+  <meta name="description" content="SourceTube 1.1.3 — privacy-first YouTube client with bundled DASH playback, SponsorBlock and local adblock.">
   <title>SourceTube</title>
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
   <link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192">
   <link rel="apple-touch-icon" href="/icon-192.png">
+  <link rel="preload" href="/fonts/iosevka-nerd-mono-regular.woff" as="font" type="font/woff" crossorigin>
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
@@ -17,13 +18,13 @@
       <span></span><span></span><span></span>
     </button>
     <a class="brand" href="#/" aria-label="SourceTube home">
-      <img src="/icon.svg" alt="" width="30" height="30">
+      <img src="/icon.svg" alt="" width="28" height="28">
       <span>SourceTube</span>
-      <small>open source</small>
+      <small>v1.1.3</small>
     </a>
     <form class="search" id="search-form" role="search">
-      <input id="search-input" name="q" type="search" placeholder="Search YouTube" autocomplete="off" aria-label="Search YouTube">
-      <button type="submit" aria-label="Search">⌕</button>
+      <input id="search-input" name="q" type="search" placeholder="search videos" autocomplete="off" aria-label="Search YouTube">
+      <button type="submit" aria-label="Search">[ / ]</button>
     </form>
     <div class="account" id="account">
       <span class="muted">checking session…</span>
@@ -32,18 +33,22 @@
 
   <div class="shell">
     <nav class="sidebar" id="sidebar" aria-label="Main navigation">
-      <a class="nav-item active" href="#/" data-nav="home"><span class="glyph">⌂</span>Home</a>
-      <a class="nav-item" href="#/subscriptions" data-nav="subscriptions"><span class="glyph">▣</span>Subscriptions</a>
+      <p class="nav-title">Browse</p>
+      <a class="nav-item active" href="#/" data-nav="home"><span class="glyph">[~]</span>Home</a>
+      <a class="nav-item" href="#/subscriptions" data-nav="subscriptions"><span class="glyph">[#]</span>Subscriptions</a>
       <div class="nav-sep"></div>
       <p class="nav-title">You</p>
-      <a class="nav-item" href="#/library" data-nav="library"><span class="glyph">◷</span>Library</a>
+      <a class="nav-item" href="#/library" data-nav="library"><span class="glyph">[=]</span>Library</a>
+      <a class="nav-item" href="#/settings" data-nav="settings"><span class="glyph">[!]</span>Settings</a>
+      <a class="nav-item" href="#/signin" data-nav="signin"><span class="glyph">[&gt;]</span>Sign in</a>
+      <a class="nav-item" href="#/transfer" data-nav="transfer"><span class="glyph">[+]</span>Transfer</a>
       <div class="nav-sep"></div>
       <p class="nav-title">Privacy</p>
       <p class="privacy-pill">no trackers</p>
-      <p class="privacy-pill">no Google JS</p>
-      <p class="privacy-pill">proxy metadata</p>
+      <p class="privacy-pill">proxy playback</p>
+      <p class="privacy-pill">local dash.js</p>
       <div class="nav-sep"></div>
-      <p class="footer-note">SourceTube 1.1.2<br>built on the open web</p>
+      <p class="footer-note">SourceTube 1.1.3<br>sharp corners. quiet defaults.</p>
     </nav>
 
     <main id="view" tabindex="-1"></main>
@@ -51,6 +56,7 @@
 
   <div class="scrim" id="scrim" hidden></div>
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <script src="/vendor/dash.all.min.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>

@@ -11,4 +11,10 @@ services:
       INVIDIOUS_INSTANCE: ${INVIDIOUS_INSTANCE:-https://yt.chocolatemoo53.com}
       SOURCETUBE_PUBLIC: /usr/share/sourcetube/public
       SOURCETUBE_PLAYER: /usr/local/bin/sourcetube-player
+      SOURCETUBE_DATA: /var/lib/sourcetube
+    volumes:
+      - sourcetube-data:/var/lib/sourcetube
     restart: unless-stopped
+
+volumes:
+  sourcetube-data:

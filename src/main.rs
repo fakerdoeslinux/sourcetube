@@ -1,8 +1,13 @@
 mod api;
 mod auth;
 mod config;
+mod dash;
+mod guard;
 mod http;
 mod mapping;
+mod sponsorblock;
+mod store;
+mod transfer;
 
 use config::Config;
 use std::net::SocketAddr;

@@ -1,37 +1,40 @@
 # SourceTube
 
-Privacy-first, open-source YouTube client with a 2018-style dark interface, built in Rust.
+Privacy-first, open-source YouTube client with a sharp-cornered, monospace 2018-style dark interface, built in Rust.
 
-SourceTube keeps Google scripts, analytics, and third-party trackers out of the page. Public metadata comes from a FreeTube-compatible Invidious instance through the SourceTube server, so your browser does not talk to Google for listings. Google sign-in uses OAuth with a read-only YouTube scope for subscriptions and personalized recommendations.
+SourceTube keeps Google scripts, analytics, and third-party trackers out of the page. Public metadata comes from a FreeTube-compatible Invidious instance through the SourceTube server, so your browser does not talk to Google for listings. Google sign-in uses optional OAuth with a read-only YouTube scope for subscriptions and transfers. Version 1.1.3 plays video through a bundled DASH player and a server-side media proxy: the watch page has no third-party player embed and cannot hit YouTube embed error 153.
 
 ## Features
 
-- 2018 YouTube-style layout, dark theme by default
+- Sharp-corner UI using a locally bundled Iosevka Nerd Font Mono; no web fonts from CDNs
 - Rust server and Rust native-player launcher; small resident memory
-- Google sign-in for subscriptions and personalized recommendations
-- Search, trending, watch pages, related videos
-- Native low-RAM playback through mpv/libmpv, with privacy-enhanced embed fallback
+- Same-origin DASH playback: bundled `dash.js`, local `<video controls playsinline>`, proxied MPD and segments
+- Native low-RAM playback through mpv/libmpv, accepting progressive, DASH and HLS URLs
+- SponsorBlock with auto-skip, manual skip, category toggles and highlight chapters, fetched through SourceTube
+- Bundled ad/tracker rules applied to outbound fetches and to promoted metadata
+- Google sign-in and a transfer wizard for subscriptions, playlists, playlist items, likes and Takeout JSON
+- Local SQLite storage for imported data under `SOURCETUBE_DATA`
 - Local watch history stored only in your browser
 - No analytics, no ad scripts, no third-party trackers
-- Metadata and thumbnails proxied through SourceTube
-- Strict CSP and locked-down security headers
-- No YouTube Data API key needed for public metadata
+- Strict CSP, encrypted HttpOnly session cookies, no external runtime assets
+
+## How playback works
+
+The watch page requests `/api/dash/manifest?id=<video-id>`. The Rust server asks the configured Invidious instance for the video metadata, fetches its MPD server-side, and rewrites every `BaseURL` to `/api/dash/segment?id=<video-id>&u=<encoded upstream URL>`. Segment requests are validated against an HTTPS-only, host-allowlisted URL guard, require a sane `Range`, are capped at 32 MiB, and are passed back as `206 Partial Content` with `Content-Range` and `Accept-Ranges`. `dash.js` is vendored in `public/vendor/` and loaded from the same origin, so DevTools shows manifest and media traffic only to SourceTube. The AppImage, Windows ZIP and Docker image all ship the player, rules, font and icons locally.
 
 ## What Google still sees
 
-SourceTube removes trackers from the client, but YouTube is still YouTube:
-
-- Sign-in goes to Google's OAuth service.
-- Video playback streams from YouTube while the video is playing.
-- Signed-in subscription requests go from the SourceTube server to the YouTube Data API with your read-only token.
-- Public metadata comes from the configured Invidious instance, not from your browser.
-- Watch history is not uploaded by SourceTube.
+- Sign-in and the optional transfer go to Google's OAuth and YouTube Data APIs.
+- Video manifests and segments are fetched by the SourceTube server, not by your browser.
+- Public metadata comes from the configured Invidious instance, never a YouTube Data API key.
+- Watch history and Takeout files are never uploaded by SourceTube.
+- The bundled adblock layer blocks tracker hosts and promoted metadata before they reach the page.
 
 ## Get your Google credentials
 
-Google credentials are only needed for sign-in and subscriptions. Public search and trending work without them. Creating the OAuth client is free; no billing account or credit card is needed for personal use.
+Google credentials are only needed for sign-in and transfers. Public search, trending and playback work without them. Creating the OAuth client is free; no billing account or credit card is needed for personal use.
 
-See [OAUTH.md](OAUTH.md) for the full Google Cloud setup, `.env` values, where to put the file for each install method, the port-fallback gotcha, and verification steps.
+See [OAUTH.md](OAUTH.md) for the full Google Cloud setup, `.env` values, where to put the file for each install method, the port-fallback redirect URIs, transfer scopes, Takeout steps and verification.
 
 ## Install on Linux
 
@@ -52,7 +55,7 @@ chmod +x SourceTube-x86_64.AppImage
 
 4. The app opens the browser automatically on the port it selected. If `8787` was busy, it uses the next free port and still opens the right URL.
 
-Set `SOURCETUBE_NO_BROWSER=1` to suppress the browser launch. Server output is written to `~/.local/share/sourcetube/server.log`.
+Set `SOURCETUBE_NO_BROWSER=1` to suppress the browser launch. Server output is written to `~/.local/share/sourcetube/server.log`. Imported metadata is stored in `~/.local/share/sourcetube/sourcetube.sqlite3`.
 
 If your distro lacks FUSE, run:
 
@@ -60,7 +63,7 @@ If your distro lacks FUSE, run:
 ./SourceTube-x86_64.AppImage --appimage-extract-and-run
 ```
 
-Put your `.env` file in `~/.config/sourcetube/.env` or next to the AppImage before starting it. The AppImage ships the Rust server, the Rust native-player launcher, and the original SourceTube icon. Native playback needs `mpv` or `libmpv.so.2` installed on the host; without it, use the embedded player.
+Put your `.env` file in `~/.config/sourcetube/.env` or next to the AppImage before starting it. The AppImage ships the Rust server, the Rust native-player launcher, the new icon, the bundled font and the local DASH player. Native playback needs `mpv` or `libmpv.so.2` installed on the host; browser playback does not.
 
 ### From source
 
@@ -85,7 +88,7 @@ Windows uses the portable ZIP; there is no Windows AppImage.
 4. Double-click `sourcetube.cmd`.
 5. The browser opens automatically on the selected port. If `8787` was busy, it uses the next free port and opens there. Server output is written to `%LOCALAPPDATA%\SourceTube\server.log`.
 
-The ZIP contains native `sourcetube.exe` and `sourcetube-player.exe`. No Node.js install is needed. For low-RAM native playback, install mpv for Windows and keep `mpv.exe` in `PATH`.
+The ZIP contains native `sourcetube.exe` and `sourcetube-player.exe`, the icon, the font and the bundled DASH player. No Node.js install is needed. For low-RAM native playback, install mpv for Windows and keep `mpv.exe` in `PATH`.
 
 ## macOS
 
@@ -107,13 +110,16 @@ Set `APP_ORIGIN` in `.env` to the public URL. For remote use, put SourceTube beh
 ## Keyboard and navigation
 
 - Search from the top bar.
-- Use the left drawer for Home, Subscriptions, and Local library.
-- Videos open in the privacy-enhanced embed.
+- Use the left drawer for Home, Subscriptions, Library, Settings, Sign in and Transfer.
+- Videos open in the bundled DASH player with native `<video>` controls and seeking.
 - Use **Native player** on a watch page to hand the stream to mpv/libmpv. On web-client deployments, the player starts on the machine running the SourceTube server.
+- Sponsor segments can be auto-skipped, manually skipped, or shown as highlight chapters in Settings.
 
-## Build from source
+## Build and test from source
 
 ```bash
+cargo fmt --all
+cargo test
 ./scripts/build-release.sh
 ```
 
@@ -121,6 +127,7 @@ Outputs land in `dist/`:
 
 - `SourceTube-x86_64.AppImage`
 - `SourceTube-Windows.zip`
+- `SHA256SUMS`
 
 Individual builds:
 
@@ -131,15 +138,14 @@ Individual builds:
 
 ## Privacy design
 
-- No external JavaScript loaded by the frontend.
+- No external JavaScript, font, filter list or media request at runtime.
 - No analytics, telemetry, pixel, or ad network.
-- Thumbnails and avatars are reverse-proxied.
-- Strict CSP: `default-src 'self'`, scripts and styles only from SourceTube.
-- `Referrer-Policy: no-referrer`.
-- `Cross-Origin-Opener-Policy: same-origin`.
-- Session cookies are encrypted, HttpOnly, SameSite=Lax, and Secure on HTTPS.
-- Public metadata uses a FreeTube-compatible Invidious instance configurable in `.env`.
+- Thumbnails, avatars, DASH manifests/segments and SponsorBlock are reverse-proxied behind a URL guard that denies HTTP, private hosts, trackers and unknown hosts.
+- Promo fields and bundled-channel rules are stripped from metadata; the adblock toggle is sent as a request header and stored locally.
+- Strict CSP: `default-src 'self'`, `media-src 'self' blob:`, `connect-src 'self' blob:`, scripts and styles only from SourceTube.
+- `Referrer-Policy: no-referrer`, `Cross-Origin-Opener-Policy: same-origin`.
+- Session cookies are encrypted, HttpOnly, SameSite=Lax, and Secure on HTTPS. OAuth tokens are never written to SQLite.
 
 ## License
 
-AGPL-3.0-only. See `LICENSE`.
+AGPL-3.0-only. See `LICENSE`. Vendored dash.js is BSD-licensed (`public/vendor/dash.all.min.js.LICENSE.txt`); the bundled Iosevka Nerd Font subset is OFL-licensed (`public/fonts/`).
